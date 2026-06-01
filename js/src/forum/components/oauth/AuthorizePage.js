@@ -166,19 +166,18 @@ export default class AuthorizePage extends IndexPage {
   onsubmit(e) {
     e.preventDefault();
     this.submit_loading = true;
-    if (app.forum.attribute('foskym-oauth-center.authorization_method_fetch')) {
-      app.request({
-        method: 'POST',
-        url: '/oauth/authorize/fetch',
-        body: {
-          ...this.params,
-          is_authorized: this.is_authorized,
-        }
-      }).then((params) => {
-        window.location.href = params.location;
-      });
-    } else {
-      e.target.submit();
-    }
+    app.request({
+      method: 'POST',
+      url: '/oauth/authorize/fetch',
+      body: {
+        ...this.params,
+        is_authorized: this.is_authorized,
+      }
+    }).then((params) => {
+      window.location.href = params.location;
+    }).catch(() => {
+      this.submit_loading = false;
+      m.redraw();
+    });
   }
 }

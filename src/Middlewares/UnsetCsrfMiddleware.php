@@ -24,7 +24,6 @@ class UnsetCsrfMiddleware implements MiddlewareInterface
     {
         $uri = [
             '/oauth/token',
-			'/oauth/authorize',
         ];
         $path = $request->getUri()->getPath();
         if (in_array($path, $uri)) {
