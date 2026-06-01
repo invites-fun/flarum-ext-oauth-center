@@ -33,8 +33,8 @@ class TokenController implements RequestHandlerInterface
         $oauth = new OAuth($this->settings);
         $server = $oauth->server();
 
-        $body = $server->handleTokenRequest($oauth->request()::createFromGlobals())
-            ->getResponseBody();
-        return new JsonResponse(json_decode($body, true));
+        $response = $server->handleTokenRequest($oauth->request()::createFromGlobals());
+        $body = $response->getResponseBody();
+        return new JsonResponse(json_decode($body, true) ?: [], $response->getStatusCode(), $response->getHttpHeaders());
     }
 }
