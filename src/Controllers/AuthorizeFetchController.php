@@ -46,7 +46,7 @@ class AuthorizeFetchController implements RequestHandlerInterface
         $response = $oauth->response();
 
         if (!$server->validateAuthorizeRequest($request, $response)) {
-            return new JsonResponse(json_decode($response->getResponseBody(), true));
+            return new JsonResponse(json_decode($response->getResponseBody(), true) ?: [], $response->getStatusCode(), $response->getHttpHeaders());
         }
 
         $is_authorized = Arr::get($params, 'is_authorized', 0);
@@ -60,9 +60,9 @@ class AuthorizeFetchController implements RequestHandlerInterface
 //            $code = substr($response->getHttpHeader('Location'), strpos($response->getHttpHeader('Location'), 'code=') + 5, 40);
             return new JsonResponse([
                 'location'  =>  $response->getHttpHeader('Location')
-            ]);
+            ], $response->getStatusCode(), $response->getHttpHeaders());
         }
 
-        return new JsonResponse(json_decode($response->getResponseBody(), true));
+        return new JsonResponse(json_decode($response->getResponseBody(), true) ?: [], $response->getStatusCode(), $response->getHttpHeaders());
     }
 }

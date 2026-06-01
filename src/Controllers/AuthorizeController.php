@@ -47,8 +47,7 @@ class AuthorizeController implements RequestHandlerInterface
         $response = $oauth->response();
 
         if (!$server->validateAuthorizeRequest($request, $response)) {
-			$response->send();
-			die;
+            return new \Laminas\Diactoros\Response\HtmlResponse($response->getResponseBody(), $response->getStatusCode(), $response->getHttpHeaders());
         }
 
         $is_authorized = (bool) Arr::get($params, 'is_authorized', 0);
@@ -60,7 +59,7 @@ class AuthorizeController implements RequestHandlerInterface
 			]);
 		}
         $server->handleAuthorizeRequest($request, $response, $is_authorized, $actor->id);
-		$response->send();
-		die;
+        
+        return new \Laminas\Diactoros\Response\HtmlResponse($response->getResponseBody(), $response->getStatusCode(), $response->getHttpHeaders());
     }
 }

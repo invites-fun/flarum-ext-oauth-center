@@ -49,24 +49,31 @@ class ResourceScopeAuthMiddleware implements MiddlewareInterface
                 $oauth = new OAuth($this->settings);
                 $server = $oauth->server();
                 $oauth_request = $oauth->request()::createFromGlobals();
+                
+                // Validate token ONCE
+                if (!$server->verifyResourceRequest($oauth_request)) {
+                    return new JsonResponse(json_decode($server->getResponse()->getResponseBody(), true) ?: [], $server->getResponse()->getStatusCode(), $server->getResponse()->getHttpHeaders());
+                }
+
+                $tokenData = $server->getAccessTokenData($oauth_request);
+                $tokenScopes = explode(' ', $tokenData['scope'] ?? '');
+
                 $has_scope = false;
                 $filtered_scopes = [];
+                
                 foreach ($scopes as $scope) {
                     if (strtolower($request->getMethod()) === strtolower($scope->method)) {
-                        if ($server->verifyResourceRequest($oauth_request, null, $scope->scope)) {
-                            $token = $server->getAccessTokenData($oauth_request);
-                            if (!in_array($scope->scope, explode(' ', $token['scope']))) {
-                                continue;
-                            }
+                        if (in_array($scope->scope, $tokenScopes)) {
                             $filtered_scopes[] = $scope;
                             $has_scope = true;
                         }
                     }
                 }
+                
                 if (!$has_scope) {
-                    return new JsonResponse(json_decode($server->getResponse()->getResponseBody(), true));
+                    return new JsonResponse(['error' => 'insufficient_scope', 'error_description' => 'The request requires higher privileges than provided by the access token'], 403);
                 }
-                $actor = User::find($token['user_id']);
+                $actor = User::find($tokenData['user_id']);
                 $request = RequestUtil::withActor($request, $actor);
                 $request = $request->withAttribute('oauth.scopes', $filtered_scopes);
                 $request = $request->withAttribute('bypassCsrfToken', true);
